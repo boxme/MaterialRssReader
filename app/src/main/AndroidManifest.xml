@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.desmond.materialrssreader" >
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    w
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme"
+        tools:ignore="UnusedAttribute" >
         <activity
             android:name="com.desmond.materialrssreader.FeedListActivity"
             android:label="@string/app_name" >
@@ -15,6 +20,13 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name="com.desmond.materialrssreader.FeedDetailActivity"
+            android:label="@string/title_activity_feed_detail" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".FeedListActivity" />
         </activity>
     </application>
 

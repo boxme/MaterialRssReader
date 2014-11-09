@@ -1,39 +1,57 @@
 package com.desmond.materialrssreader;
 
-import android.app.Activity;
+import android.app.Fragment;
+import android.app.ListActivity;
+import android.content.Intent;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.view.View;
+import android.widget.ListView;
+import android.widget.Toast;
+
+import com.desmond.materialrssreader.adapter.FeedAdapter;
+import com.desmond.materialrssreader.rss.models.Feed;
+import com.desmond.materialrssreader.rss.models.Item;
 
 
-public class FeedListActivity extends Activity {
+public class FeedListActivity extends ListActivity implements FeedConsumer {
+
+    private static final String DATA_FRAGMENT_TAG = DataFragment.class.getSimpleName();
+
+    private FeedAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_feed_list);
-    }
+        setContentView(android.R.layout.list_content);
 
+        DataFragment dataFragment =
+                (DataFragment) getFragmentManager().findFragmentByTag(DATA_FRAGMENT_TAG);
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_feed_list, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        if (dataFragment == null) {
+            dataFragment = (DataFragment) Fragment.instantiate(this, DataFragment.class.getName());
+            dataFragment.setRetainInstance(true);
+            getFragmentManager().beginTransaction()
+                    .add(dataFragment, DATA_FRAGMENT_TAG)
+                    .commit();
         }
+    }
 
-        return super.onOptionsItemSelected(item);
+    @Override
+    protected void onListItemClick(ListView l, View v, int position, long id) {
+        Intent detailIntent = new Intent(this, FeedDetailActivity.class);
+        Item item = adapter.getItem(position);
+        detailIntent.putExtra(FeedDetailActivity.ARG_ITEM, item);
+        startActivity(detailIntent);
+    }
+
+    @Override
+    public void setFeed(Feed feed) {
+        adapter = new FeedAdapter(this, feed.getItems());
+        setListAdapter(adapter);
+    }
+
+    @Override
+    public void handleError(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 }

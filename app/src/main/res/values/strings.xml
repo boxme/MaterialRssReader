@@ -4,5 +4,10 @@
     <string name="app_name">MaterialRssReader</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <!--<string name="feed_url">http://feeds.bbci.co.uk/news/rss.xml</string>-->
+    <string name="feed_url">http://blog.stylingandroid.com/feed/</string>
+    <string name="title_activity_feed_detail">FeedDetailActivity</string>
 
 </resources>
