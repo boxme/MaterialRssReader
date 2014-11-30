@@ -4,9 +4,8 @@ import android.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ListView;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.widget.Toast;
 
 import com.desmond.materialrssreader.adapter.FeedAdapter;
@@ -14,28 +13,23 @@ import com.desmond.materialrssreader.rss.models.Feed;
 import com.desmond.materialrssreader.rss.models.Item;
 
 
-public class FeedListActivity extends ActionBarActivity implements FeedConsumer {
+public class FeedListActivity extends ActionBarActivity
+        implements FeedConsumer, FeedAdapter.ItemClickListener {
 
     private static final String DATA_FRAGMENT_TAG = DataFragment.class.getSimpleName();
 
-    private ListView mListView;
+    private RecyclerView mRecyclerView;
     private FeedAdapter mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(android.R.layout.list_content);
+        setContentView(R.layout.feed_list);
 
-        mListView = (ListView) findViewById(android.R.id.list);
-        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent detailIntent = new Intent(FeedListActivity.this, FeedDetailActivity.class);
-                Item item = mAdapter.getItem(position);
-                detailIntent.putExtra(FeedDetailActivity.ARG_ITEM, item);
-                startActivity(detailIntent);
-            }
-        });
+        mRecyclerView = (RecyclerView) findViewById(R.id.list);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
+        mRecyclerView.setLayoutManager(layoutManager);
 
         DataFragment dataFragment =
                 (DataFragment) getFragmentManager().findFragmentByTag(DATA_FRAGMENT_TAG);
@@ -52,12 +46,19 @@ public class FeedListActivity extends ActionBarActivity implements FeedConsumer 
 
     @Override
     public void setFeed(Feed feed) {
-        mAdapter = new FeedAdapter(this, feed.getItems());
-        mListView.setAdapter(mAdapter);
+        mAdapter = new FeedAdapter(feed.getItems(), this);
+        mRecyclerView.setAdapter(mAdapter);
     }
 
     @Override
     public void handleError(String message) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void itemClicked(Item item) {
+        Intent detailIntent = new Intent(FeedListActivity.this, FeedDetailActivity.class);
+        detailIntent.putExtra(FeedDetailActivity.ARG_ITEM, item);
+        startActivity(detailIntent);
     }
 }

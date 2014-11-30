@@ -1,11 +1,12 @@
 package com.desmond.materialrssreader.adapter;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
+import android.support.v7.widget.RecyclerView;
 import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import com.desmond.materialrssreader.R;
@@ -20,45 +21,61 @@ import java.util.Locale;
 /**
  * Created by desmond on 9/11/14.
  */
-public class FeedAdapter extends ArrayAdapter<Item> {
+public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.ViewHolder> {
 
     private DateFormat dateFormat = SimpleDateFormat.getDateInstance(SimpleDateFormat.MEDIUM, Locale.getDefault());
 
-    public FeedAdapter(Context context, List<Item> objects) {
-        super(context, 0, objects);
+    private List<Item> items;
+    private ItemClickListener itemClickListener;
+
+    public FeedAdapter(List<Item> objects, @NonNull ItemClickListener itemClickListener) {
+        this.items = objects;
+        this.itemClickListener = itemClickListener;
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        View view;
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        Context context = parent.getContext();
+        View rootView = LayoutInflater.from(context).inflate(R.layout.feed_list_item, parent, false);
 
-        if (convertView == null) {
-            LayoutInflater inflater = LayoutInflater.from(getContext());
-            view = inflater.inflate(R.layout.feed_list_item, parent, false);
-        } else {
-            view = convertView;
-        }
-        ViewHolder viewHolder = (ViewHolder) view.getTag();
-        if (viewHolder == null) {
-            TextView title = (TextView) view.findViewById(R.id.feed_item_title);
-            TextView description = (TextView) view.findViewById(R.id.feed_item_description);
-            TextView date = (TextView) view.findViewById(R.id.feed_item_date);
-            viewHolder = new ViewHolder(title, description, date);
-            view.setTag(viewHolder);
-        }
-        Item item = getItem(position);
-        viewHolder.setTitle(item.getTitle());
-        viewHolder.setDescription(Html.fromHtml(item.getDescription()));
-        viewHolder.setDate(dateFormat.format(new Date(item.getPubDate())));
-        return view;
+        return ViewHolder.newInstance(rootView);
     }
 
-    private static final class ViewHolder {
+    @Override
+    public void onBindViewHolder(ViewHolder holder, int position) {
+        final Item item = items.get(position);
+        holder.setTitle(item.getTitle());
+        holder.setDescription(Html.fromHtml(item.getDescription()));
+        holder.setDate(dateFormat.format(new Date(item.getPubDate())));
+        holder.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                itemClickListener.itemClicked(item);
+            }
+        });
+    }
+
+    @Override
+    public int getItemCount() {
+        return items.size();
+    }
+
+    public static final class ViewHolder extends RecyclerView.ViewHolder {
+        private final View parent;
         private final TextView title;
         private final TextView description;
         private final TextView date;
 
-        private ViewHolder(TextView title, TextView description, TextView date) {
+        public static ViewHolder newInstance(View parent) {
+            TextView title = (TextView) parent.findViewById(R.id.feed_item_title);
+            TextView description = (TextView) parent.findViewById(R.id.feed_item_description);
+            TextView date = (TextView) parent.findViewById(R.id.feed_item_date);
+            return new ViewHolder(parent, title, description, date);
+        }
+
+        private ViewHolder(View parent, TextView title, TextView description, TextView date) {
+            super(parent);
+            this.parent = parent;
             this.title = title;
             this.description = description;
             this.date = date;
@@ -76,5 +93,12 @@ public class FeedAdapter extends ArrayAdapter<Item> {
             date.setText(text);
         }
 
+        public void setOnClickListener(View.OnClickListener listener) {
+            parent.setOnClickListener(listener);
+        }
+    }
+
+    public interface ItemClickListener {
+        void itemClicked(Item item);
     }
 }
