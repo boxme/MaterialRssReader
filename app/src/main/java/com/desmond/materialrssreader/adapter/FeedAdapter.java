@@ -22,6 +22,7 @@ import java.util.Locale;
  * Created by desmond on 9/11/14.
  */
 public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.ViewHolder> {
+    public static final String TAG = FeedAdapter.class.getSimpleName();
 
     private DateFormat dateFormat = SimpleDateFormat.getDateInstance(SimpleDateFormat.MEDIUM, Locale.getDefault());
 
@@ -31,6 +32,7 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.ViewHolder> {
     public FeedAdapter(List<Item> objects, @NonNull ItemClickListener itemClickListener) {
         this.items = objects;
         this.itemClickListener = itemClickListener;
+        setHasStableIds(true);
     }
 
     @Override
@@ -58,6 +60,31 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.ViewHolder> {
     @Override
     public int getItemCount() {
         return items.size();
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return items.get(position).getPubDate();
+    }
+
+    public void moveItem(int start, int end) {
+        int max = Math.max(start, end);
+        int min = Math.min(start, end);
+
+        if (min >= 0 && max < items.size()) {
+            Item item = items.remove(min);
+            items.add(max, item);
+            notifyItemMoved(min, max);
+        }
+    }
+
+    public int getPositionforID(long id) {
+        for (int i = 0; i < items.size(); i++) {
+            if (items.get(i).getPubDate() == id) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     public static final class ViewHolder extends RecyclerView.ViewHolder {

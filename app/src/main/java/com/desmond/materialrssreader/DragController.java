@@ -6,11 +6,12 @@ import android.graphics.Rect;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
+
+import com.desmond.materialrssreader.adapter.FeedAdapter;
 
 /**
  * Instantiating DragController requires us to pass in a reference to the RecyclerView,
@@ -23,6 +24,8 @@ import android.widget.ImageView;
  * In our case we want to take control during drag operations, so we hold boolean indicating the dragging state.
  */
 public class DragController implements RecyclerView.OnItemTouchListener {
+
+    public static final String TAG = DragController.class.getSimpleName();
     public static final int ANIMATION_DURATION = 100;
 
     private RecyclerView mRecyclerView;
@@ -32,7 +35,7 @@ public class DragController implements RecyclerView.OnItemTouchListener {
     private boolean isDragging = false;
     private View mDraggingView;
     private boolean mIsFirst = true;
-    private int mDraggingItem = -1;
+    private long mDraggingItemID = -1;
     private float mStartY = 0f;
     private Rect mStartBounds = null;
 
@@ -49,7 +52,8 @@ public class DragController implements RecyclerView.OnItemTouchListener {
                         dragStart(e.getX(), e.getY());
                     }
                 };
-        mGestureDetector = new GestureDetectorCompat(recyclerView.getContext(), longClickGestureListener);
+        mGestureDetector = new GestureDetectorCompat(recyclerView.getContext(),
+                longClickGestureListener);
     }
 
     @Override
@@ -61,6 +65,10 @@ public class DragController implements RecyclerView.OnItemTouchListener {
         return false;
     }
 
+    /**
+     * Process a touch event as part of a gesture that was claimed by returning true from
+     * a previous call to {@link #onInterceptTouchEvent}.
+     */
     @Override
     public void onTouchEvent(RecyclerView rv, MotionEvent e) {
         int x = (int) e.getX();
@@ -77,9 +85,6 @@ public class DragController implements RecyclerView.OnItemTouchListener {
 
     private void dragStart(float x, float y) {
         mDraggingView = mRecyclerView.findChildViewUnder(x, y);
-        View firstView = mRecyclerView.getChildAt(0);
-
-        mIsFirst = mDraggingView == firstView;
 
         mStartY = y - mDraggingView.getTop();
         paintViewToOverlay(mDraggingView);
@@ -87,7 +92,7 @@ public class DragController implements RecyclerView.OnItemTouchListener {
         mOverlay.setTranslationY(mDraggingView.getTop());
 
         mDraggingView.setVisibility(View.INVISIBLE);
-        mDraggingItem = mRecyclerView.indexOfChild(mDraggingView);
+        mDraggingItemID = mRecyclerView.getChildItemId(mDraggingView);
 
         mStartBounds = new Rect(mDraggingView.getLeft(), mDraggingView.getTop(),
                 mDraggingView.getRight(), mDraggingView.getBottom());
@@ -95,6 +100,26 @@ public class DragController implements RecyclerView.OnItemTouchListener {
 
     private void drag(int y, View view) {
         mOverlay.setTranslationY(y - mStartY);
+        if (!isInPreviousBounds()) {
+            if (view != null) {
+                swapViews(view);
+            }
+        }
+    }
+
+    private void swapViews(View currentView) {
+        long replacementID = mRecyclerView.getChildItemId(currentView);
+        FeedAdapter adapter = (FeedAdapter) mRecyclerView.getAdapter();
+        int start = adapter.getPositionforID(replacementID);
+        int end = adapter.getPositionforID(mDraggingItemID);
+        mIsFirst = (start == 0 || end == 0);
+        adapter.moveItem(start, end);
+        if (mIsFirst) {
+            mRecyclerView.scrollToPosition(0);
+            mIsFirst = false;
+        }
+        mStartBounds.top = currentView.getTop();
+        mStartBounds.bottom = currentView.getBottom();
     }
 
     private void dragEnd(View view) {
@@ -105,15 +130,22 @@ public class DragController implements RecyclerView.OnItemTouchListener {
         mDraggingView.setTranslationY(translationY - mStartBounds.top);
 
         // Note: getTop() of a view wont change after translation, it is the vertical location
-        // of the view in its parent after onLayout
+        // of the view in its parent after onLayout. To change, use setTop()
         ViewCompat.animate(mDraggingView).translationY(0f).setDuration(ANIMATION_DURATION).start();
     }
 
     private void paintViewToOverlay(View view) {
-        Bitmap bitmap = Bitmap.createBitmap(view.getWidth(), view.getHeight(), Bitmap.Config.ARGB_8888);
+        Bitmap bitmap = Bitmap.createBitmap(view.getWidth(), view.getHeight(),
+                Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
         view.draw(canvas);
         mOverlay.setImageBitmap(bitmap);
         mOverlay.setTop(0);
+    }
+
+    public boolean isInPreviousBounds() {
+        float overlayTop = mOverlay.getTop() + mOverlay.getTranslationY();
+        float overLayBottom = mOverlay.getBottom() + mOverlay.getTranslationY();
+        return overlayTop < mStartBounds.bottom && overLayBottom > mStartBounds.top;
     }
 }

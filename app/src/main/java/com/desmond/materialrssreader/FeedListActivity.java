@@ -17,6 +17,8 @@ import com.desmond.materialrssreader.rss.models.Item;
 public class FeedListActivity extends ActionBarActivity
         implements FeedConsumer, FeedAdapter.ItemClickListener {
 
+    public static final String TAG = FeedListActivity.class.getSimpleName();
+
     private static final String DATA_FRAGMENT_TAG = DataFragment.class.getSimpleName();
 
     private RecyclerView mRecyclerView;
