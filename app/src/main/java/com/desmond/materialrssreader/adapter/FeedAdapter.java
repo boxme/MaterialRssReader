@@ -35,10 +35,17 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.ViewHolder> {
         setHasStableIds(true);
     }
 
+    // Override this method to return the specific view layout ID for
+    // the different view type based on its position in the RecyclerView
+    @Override
+    public int getItemViewType(int position) {
+        return R.layout.feed_list_item;
+    }
+
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         Context context = parent.getContext();
-        View rootView = LayoutInflater.from(context).inflate(R.layout.feed_list_item, parent, false);
+        View rootView = LayoutInflater.from(context).inflate(viewType, parent, false);
 
         return ViewHolder.newInstance(rootView);
     }
@@ -122,6 +129,18 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.ViewHolder> {
 
         public void setOnClickListener(View.OnClickListener listener) {
             parent.setOnClickListener(listener);
+        }
+
+        public View getTitleView() {
+            return title;
+        }
+
+        public View getDescView() {
+            return description;
+        }
+
+        public View getDateView() {
+            return date;
         }
     }
 

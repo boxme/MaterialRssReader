@@ -10,4 +10,7 @@
     <string name="feed_url">http://blog.stylingandroid.com/feed/</string>
     <string name="title_activity_feed_detail">FeedDetailActivity</string>
 
+    <string name="transition_title">com.desmond.materialrssreader.transition.TITLE</string>
+    <string name="transition_date">com.desmond.materialrssreader.transition.DATE</string>
+    <string name="transition_body">com.desmond.materialrssreader.transition.BODY</string>
 </resources>
